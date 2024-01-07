@@ -380,7 +380,7 @@ def main_run(models, device, cam_vis, return_what,
         input_im = input_im * 2 - 1
         input_im = transforms.functional.resize(input_im, [h, w])
 
-        sampler = DDIMSampler(models['turncam'])
+        sampler = DDIMSampler(models['turncam'], device=device)
         # used_x = -x  # NOTE: Polar makes more sense in Basile's opinion this way!
         used_x = x  # NOTE: Set this way for consistency.
         x_samples_ddim = sample_model(input_im, models['turncam'], sampler, precision, h, w,
@@ -471,12 +471,18 @@ def run_demo(
         config='configs/sd-objaverse-finetune-c_concat-256.yaml'):
 
     print('sys.argv:', sys.argv)
-    if len(sys.argv) > 1:
-        print('old device_idx:', device_idx)
-        device_idx = int(sys.argv[1])
-        print('new device_idx:', device_idx)
+    if len(sys.argv) > 1 and sys.argv[1][:1].isalpha():
+        # HACK
+        device = sys.argv[1]
+    else:
+        if len(sys.argv) > 1:
+            print('old device_idx:', device_idx)
+            device_idx = int(sys.argv[1])
+            print('new device_idx:', device_idx)
 
-    device = f'cuda:{device_idx}'
+        device = f'cuda:{device_idx}'
+
+    print('device:', device)
     config = OmegaConf.load(config)
 
     # Instantiate all models beforehand for efficiency.
@@ -565,7 +571,7 @@ def run_demo(
                     label='Relationship between input (green) and output (blue) camera poses')
 
                 gen_output = gr.Gallery(label='Generated images from specified new viewpoint')
-                gen_output.style(grid=2)
+                #gen_output.style(grid=2)
 
                 preproc_output = gr.Image(type='pil', image_mode='RGB',
                                           label='Preprocessed input image', visible=_SHOW_INTERMEDIATE)
@@ -654,7 +660,7 @@ def run_demo(
                                     0.0, 180.0, 0.0),
                        inputs=preset_inputs, outputs=preset_outputs)
 
-    demo.launch(enable_queue=True, share=True)
+    demo.launch(share=False)
 
 
 if __name__ == '__main__':

@@ -55,6 +55,11 @@ Run our gradio demo for novel view synthesis:
 python gradio_new.py
 ```
 
+On a Mac, you need to use MPS with fallback:
+```
+PYTORCH_ENABLE_MPS_FALLBACK=1 python gradio_new.py mps
+```
+
 Note that this app uses around 22 GB of VRAM, so it may not be possible to run it on any GPU.
 
 ### Training Script (preliminary)
