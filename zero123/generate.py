@@ -1,30 +1,29 @@
-'''
-conda activate zero123
-cd stable-diffusion
-python gradio_new.py 0
-'''
+import sys
+import time
 import fileinput
 import json
 import os.path
 import uuid
 import traceback
-import diffusers  # 0.12.1
 import math
+
 import numpy as np
-import sys
-import time
 import torch
 from contextlib import nullcontext
+import diffusers  # 0.12.1
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from einops import rearrange
-from functools import partial
-from ldm.models.diffusion.ddim import DDIMSampler
-from ldm.util import create_carvekit_interface, load_and_preprocess, instantiate_from_config
 from omegaconf import OmegaConf
 from PIL import Image
 from transformers import AutoFeatureExtractor #, CLIPImageProcessor
 from torch import autocast
 from torchvision import transforms
+
+from zero123.ldm.models.diffusion.ddim import DDIMSampler
+from zero123.ldm.util import create_carvekit_interface, load_and_preprocess, instantiate_from_config
+
+
+print(sys.path)
 
 
 _GPU_INDEX = 0

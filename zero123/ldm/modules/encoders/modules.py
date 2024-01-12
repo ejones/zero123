@@ -4,8 +4,8 @@ import numpy as np
 from functools import partial
 import kornia
 
-from ldm.modules.x_transformer import Encoder, TransformerWrapper  # TODO: can we directly rely on lucidrains code and simply add this as a reuirement? --> test
-from ldm.util import default
+from zero123.ldm.modules.x_transformer import Encoder, TransformerWrapper  # TODO: can we directly rely on lucidrains code and simply add this as a reuirement? --> test
+from zero123.ldm.util import default
 import clip
 
 
@@ -209,7 +209,7 @@ class FrozenT5Embedder(AbstractEncoder):
     def encode(self, text):
         return self(text)
 
-from ldm.thirdp.psp.id_loss import IDFeatures
+from zero123.ldm.thirdp.psp.id_loss import IDFeatures
 import kornia.augmentation as K
 
 class FrozenFaceEncoder(AbstractEncoder):
@@ -472,8 +472,8 @@ class SpatialRescaler(nn.Module):
         return self(x)
 
 
-from ldm.util import instantiate_from_config
-from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
+from zero123.ldm.util import instantiate_from_config
+from zero123.ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 
 
 class LowScaleEncoder(nn.Module):
