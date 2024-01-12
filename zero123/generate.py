@@ -23,9 +23,6 @@ from zero123.ldm.models.diffusion.ddim import DDIMSampler
 from zero123.ldm.util import create_carvekit_interface, load_and_preprocess, instantiate_from_config
 
 
-print(sys.path)
-
-
 _GPU_INDEX = 0
 
 
@@ -151,6 +148,12 @@ def main(
     print('Instantiating Carvekit HiInterface...')
     models['carvekit'] = create_carvekit_interface()
 
+    # print()
+    # for key, mod in sys.modules.items():
+    #     if key.startswith('zero123.ldm.') and mod.__file__:
+    #         print(mod.__file__)
+    # print()
+
     for line in fileinput.input(('-',)):
         try:
             params = json.loads(line)
@@ -195,5 +198,4 @@ def main(
 
 
 if __name__ == '__main__':
-    print(torch.version)
     main(*sys.argv[1:])

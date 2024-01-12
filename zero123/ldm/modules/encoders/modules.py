@@ -535,7 +535,7 @@ class LowScaleEncoder(nn.Module):
 
 
 if __name__ == "__main__":
-    from ldm.util import count_params
+    from zero123.ldm.util import count_params
     sentences = ["a hedgehog drinking a whiskey", "der mond ist aufgegangen", "Ein Satz mit vielen Sonderzeichen: äöü ß ?! : 'xx-y/@s'"]
     model = FrozenT5Embedder(version="google/t5-v1_1-xl").cuda()
     count_params(model, True)
