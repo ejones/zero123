@@ -1,0 +1,8 @@
+logs/
+outputs/
+*.egg-info
+__pycache__
+*.ckpt
+*.pth
+.ipynb_checkpoints/
+.vscode/
