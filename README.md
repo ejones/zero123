@@ -35,10 +35,6 @@ conda create -n zero123 python=3.9
 conda activate zero123
 cd zero123
 pip install -r requirements.txt
-git clone https://github.com/CompVis/taming-transformers.git
-pip install -e taming-transformers/
-git clone https://github.com/openai/CLIP.git
-pip install -e CLIP/
 ```
 
 Download checkpoint under `zero123` through one of the following sources:

@@ -23,7 +23,7 @@ from omegaconf import ListConfig
 from zero123.ldm.util import log_txt_as_img, exists, default, ismap, isimage, mean_flat, count_params, instantiate_from_config
 from zero123.ldm.modules.ema import LitEma
 from zero123.ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianDistribution
-from zero123.ldm.models.autoencoder import VQModelInterface, IdentityFirstStage, AutoencoderKL
+from zero123.ldm.models.autoencoder import IdentityFirstStage, AutoencoderKL
 from zero123.ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from zero123.ldm.models.diffusion.ddim import DDIMSampler
 from zero123.ldm.modules.attention import CrossAttention
@@ -790,14 +790,8 @@ class LatentDiffusion(DDPM):
                 z = z.view((z.shape[0], -1, ks[0], ks[1], z.shape[-1]))  # (bn, nc, ks[0], ks[1], L )
 
                 # 2. apply model loop over last dim
-                if isinstance(self.first_stage_model, VQModelInterface):
-                    output_list = [self.first_stage_model.decode(z[:, :, :, :, i],
-                                                                 force_not_quantize=predict_cids or force_not_quantize)
-                                   for i in range(z.shape[-1])]
-                else:
-
-                    output_list = [self.first_stage_model.decode(z[:, :, :, :, i])
-                                   for i in range(z.shape[-1])]
+                output_list = [self.first_stage_model.decode(z[:, :, :, :, i])
+                               for i in range(z.shape[-1])]
 
                 o = torch.stack(output_list, axis=-1)  # # (bn, nc, ks[0], ks[1], L)
                 o = o * weighting
@@ -808,16 +802,10 @@ class LatentDiffusion(DDPM):
                 decoded = decoded / normalization  # norm is shape (1, 1, h, w)
                 return decoded
             else:
-                if isinstance(self.first_stage_model, VQModelInterface):
-                    return self.first_stage_model.decode(z, force_not_quantize=predict_cids or force_not_quantize)
-                else:
-                    return self.first_stage_model.decode(z)
+                return self.first_stage_model.decode(z)
 
         else:
-            if isinstance(self.first_stage_model, VQModelInterface):
-                return self.first_stage_model.decode(z, force_not_quantize=predict_cids or force_not_quantize)
-            else:
-                return self.first_stage_model.decode(z)
+            return self.first_stage_model.decode(z)
 
     @torch.no_grad()
     def encode_first_stage(self, x):
