@@ -203,7 +203,7 @@ def main(
                 output_im.save(os.path.join(out_dir, out_name))
                 output_im_paths.append(out_name)
 
-            print(json.dumps(output_ims))
+            print(json.dumps(output_im_paths))
         except:
             traceback.print_exc()
 
