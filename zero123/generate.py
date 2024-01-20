@@ -48,7 +48,7 @@ def load_model_from_config(config, ckpt, device, verbose=False):
 
 @torch.no_grad()
 def sample_model(input_im, model, sampler, precision, h, w, ddim_steps, n_samples, scale,
-                 ddim_eta, x, y, z):
+                 ddim_eta, x, y, z, img_callback=None):
     precision_scope = autocast if precision == 'autocast' else nullcontext
     with precision_scope('cuda'):
         with model.ema_scope():
@@ -70,6 +70,16 @@ def sample_model(input_im, model, sampler, precision, h, w, ddim_steps, n_sample
                 uc = None
 
             shape = [4, h // 8, w // 8]
+
+            if img_callback:
+                def img_callback_sampler(pred_x0, i):
+                    def decode_img():
+                        pred_x0_ddim = model.decode_first_stage(pred_x0)
+                        return torch.clamp((pred_x0_ddim + 1.0) / 2.0, min=0.0, max=1.0).cpu()
+                    img_callback(decode_img, i)
+            else:
+                img_callback_sampler = None
+
             samples_ddim, _ = sampler.sample(S=ddim_steps,
                                              conditioning=cond,
                                              batch_size=n_samples,
@@ -78,7 +88,8 @@ def sample_model(input_im, model, sampler, precision, h, w, ddim_steps, n_sample
                                              unconditional_guidance_scale=scale,
                                              unconditional_conditioning=uc,
                                              eta=ddim_eta,
-                                             x_T=None)
+                                             x_T=None,
+                                             img_callback=img_callback_sampler)
             print(samples_ddim.shape)
             # samples_ddim = torch.nn.functional.interpolate(samples_ddim, 64, mode='nearest', antialias=False)
             x_samples_ddim = model.decode_first_stage(samples_ddim)
@@ -133,6 +144,10 @@ class ImageViewpointGenerator:
         print('Instantiating Carvekit HiInterface...')
         self.carvekit_model = create_carvekit_interface()
 
+    def preprocess(self, image):
+        im_data = load_and_preprocess(self.carvekit_model, image)
+        return Image.fromarray(im_data.astype(np.uint8))
+
     def generate(self, params):
         raw_im = params['image']
         x = params.get("x", 0.0)
@@ -146,6 +161,7 @@ class ImageViewpointGenerator:
         precision = params.get("precision", 'fp32')
         h = params.get("h", 256)
         w = params.get("w", 256)
+        img_callback = params.get('img_callback')
 
         raw_im.thumbnail([1536, 1536], Image.Resampling.LANCZOS)
         input_im = preprocess_image(self.carvekit_model, raw_im, preprocess)
@@ -154,11 +170,25 @@ class ImageViewpointGenerator:
         input_im = input_im * 2 - 1
         input_im = transforms.functional.resize(input_im, [h, w])
 
+        if img_callback:
+            def sample_img_callback(decode_samples, i):
+                def get_imgs():
+                    samples = decode_samples() 
+                    ims = []
+                    for sample in samples:
+                        sample = 255.0 * rearrange(sample.cpu().numpy(), 'c h w -> h w c')
+                        ims.append(Image.fromarray(sample.astype(np.uint8)))
+                    return ims
+                img_callback(get_imgs, i)
+        else:
+            sample_img_callback = None
+
         sampler = DDIMSampler(self.turncam_model, device=self.device)
         # used_x = -x  # NOTE: Polar makes more sense in Basile's opinion this way!
         used_x = x  # NOTE: Set this way for consistency.
         x_samples_ddim = sample_model(input_im, self.turncam_model, sampler, precision, h, w,
-                                      ddim_steps, n_samples, scale, ddim_eta, used_x, y, z)
+                                      ddim_steps, n_samples, scale, ddim_eta, used_x, y, z,
+                                      img_callback=sample_img_callback)
 
         output_ims = []
         for x_sample in x_samples_ddim:
